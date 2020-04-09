@@ -171,19 +171,10 @@ class RSA:
 ########################################################################
 def main():
   RSA()
+  #this will make a new key every time to avoid that make a key then all future uses of this comment out the generate keys line 
   RSA.GenerateKeys("15924533657845645326547896565478954212291232125997463265214276172791575553211458974563264573724576724377584723754646728352545764849758652432421342714576746745","1592453365784569532654789656547895421229123212599746346553211458974563234573724576724377584714567427364619758345645123774646728352545764849758612432421342714576746745")
-  #fin = open("testfile.txt","w")
-  #fin.write("this is a lot of test code you got to test in order to have test code oh wow it seems i have really done it i am a super genius of unparelled genius for being like me oh year i am great oh yea where do you break i kn")
-  #fin.close()
   RSA.Encrypt("testfile.txt","encrptedtestfile.txt")
   RSA.Decrypt("encrptedtestfile.txt","decreptedtestfile.txt")
-  #fin = open("testfile.txt","r")
-  #print(fin.read())
-  #fin.close()
-  #print("")
-  #fin = open("decreptedtestfile.txt","r")
-  #print(fin.read())
-  #fin.close()
 
 ###################################################################
 def miller(num,base):
