@@ -1,0 +1,12 @@
+Write one of these three programs:
+
+1. Implement the permutation generating algorithm found in section 6.6 of our book. Do not use Python's built in permutation generator, and do not go to the web to find code. This is a programming class, so write your own code - closely following the algorithm presented in the book. Wrap the code in a main function so that your program prompts the user for any integer N between 1 and 9, and prints ALL permutations in lexicographic order for that N.
+
+2. Implement the combination generating algorithm found in section 6.6 of our book, following the same rules as stated in program 1. Prompt for integers N and R, between 1 and 9.
+
+3. Write a program that generates all combinations of 5 cards dealt from a standard deck of 52 cards. (You can use the built in Python combination generator.) Test each possible "hand" to see if it is a royal flush, straight flush, four of a kind, full house, flush, straight, three of a kind, two pair, pair, or nothing. Print the total found of each. There is no input to this program. Your results should look something like this:
+
+Royal Flush: 4
+Straight Flush: 36
+...
+Nothing: 1302540
