@@ -1,41 +1,50 @@
-#https://cit.dixie.edu/cs/3310/programs/RSA_Assignment.htm
 import random
 import math
 
 class RSA:
 
   def GenerateKeys(s1,s2):
-    p = 0 #s1
-    q = 0 #s2
-    x = 0 #counter
+    alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+    #remove spaces
+    s1 = s1.replace(" ", "").lower()
+    s2 = s2.replace(" ", "").lower()
     #convert from 26 to 10
-    for i in str(s1):
-      p += int(i)*pow(26,x)
-      x += 1
-    x = 0
-    for i in str(s2):
-      q += int(i) * pow(26,x)
-      x += 1
+    p = 0
+    for i in s1:
+      value = alphabet.find(i)
+      p *= 26
+      p += value
+    q = 0
+    for i in s2:
+      value = alphabet.find(i)
+      q *= 26
+      q += value
+  
     #mod
     fixer = pow(10,200)
     if p > fixer:
       p %= fixer
     else:
       print("p was too small")
+
     if q > fixer:
       q %= fixer
     else:
       print("q was too short" )
+
     #make odd
     if p % 2 == 0:
       p += 1
     if q % 2 == 0:
       q += 1
+
     #make prime
     while not prime(p,30):
       p += 2
     while not prime(q,30):
       q += 2
+
+    #make the keys
     n = p*q
     r = (p -1)*(q-1)
     e = random.randint(1*pow(10,398),2*pow(10,398))
@@ -45,108 +54,136 @@ class RSA:
 
     #public key
     public = open("public.txt","w")
-    public.writelines([str(n) + "\n",str(e) + "\n"])
+    public.write(str(n) + '\n')
+    public.write(str(e) + '\n')
     public.close()
 
     #private key
     private = open("private.txt","w")
-    private.writelines([str(n) + "\n",str(d) + "\n"])
+    private.write(str(n) + "\n")
+    private.write(str(d) + "\n")
     private.close()
     return
 ##################################################################
   def Encrypt(infile,outfile):
+    #70 base alphabet
     alphabet = ".,?! \t\n\rabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+    #open file to be encrypted
     fin = open(infile,"rb")
     fileBinary = fin.read()
     text = fileBinary.decode("utf-8")
     fin.close()
-    #get keys
+
+    #get keys to encrypt 
     fin = open('public.txt',"rb")
-    PlainTextBinary = fin.read()
-    PlainText = PlainTextBinary.decode("utf-8")
+    Keys = fin.readlines()
     fin.close()
-    PlainText = PlainText.splitlines()
-    n = PlainText[0]
-    e = PlainText[1]
 
-    x = 0
-    p = 0
-    holder = 0
+    #seperate into keys
+    n = int(Keys[0])
+    e = int(Keys[1])
+
     #convert from 70 to 10
-    for i in text:
-      holder = alphabet.index(i)
-      p += int(holder)*pow(70,x)
-      x += 1
-    #encrypt
-    p = pow(int(p),int(e),int(n))
+    BigBlock = []
+    #200 is size of text block
+    while len(text) >= 200:
+      c = 0
+      newBlock = text[:200]
+      for i in newBlock:
+        value = alphabet.find(i)
+        c *= 70
+        c += value
+      BigBlock.append(c)
+      text = text[200:]
 
-    stringMessage = ""
-    res = ""
-    #convert from 10 to 70
-    while p > 0:
-      res += alphabet[pow(int(p),1,70)]
-      p = int(p)//70
-    stringMessage += str(res)
+    #last block
+    c = 0
+    for i in text:
+      value = alphabet.find(i)
+      c *= 70
+      c += value
+    BigBlock.append(c)
+
+    #encrypt
+    message = ""
+    for i in BigBlock:
+      num = pow(i,e,n)
+      result = ""
+      if num == 0:
+        result = alphabet[0]
+      while num != 0:
+        result = alphabet[num % 70] + result
+        num = num // 70
+      if result == "":
+        result = "0"
+      result += "$"
+      message += result
+
     fin = open(outfile,"wb")
-    fin.write(stringMessage.encode("utf-8"))
+    fin.write(message.encode("utf-8"))
     fin.close()
     return
 
 ##################################################################
   def Decrypt(infile,outfile):
+    #set alphabet
+    alphabet = ".,?! \t\n\rabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
     #get text
     fin = open(infile,"rb")
     fileBinary = fin.read()
     text = fileBinary.decode("utf-8")
     fin.close()
-    alphabet = ".,?! \t\n\rabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
     #get keys
     fin = open('private.txt',"rb")
-    PlainTextBinary = fin.read()
-    PlainText = PlainTextBinary.decode("utf-8")
+    Keys = fin.readlines()
     fin.close()
-    PlainText = PlainText.splitlines()
-    n = PlainText[0]
-    d = PlainText[1]
+    n = int(Keys[0])
+    d = int(Keys[1])
 
-    x = 0
-    p = 0
-    holder = 0
-    #convert from 70 to 10
-    for i in text:
-      holder = alphabet.index(i)
-      p += int(holder)*pow(70,x)
-      x += 1
-    p = pow(int(p),int(d),int(n))
+    textblocks = text.split('$')
+    message = ""
+    
+    for i in textblocks:
+      num = 0
+      for number in i:
+        value = alphabet.find(number)
+        num *= 70
+        num += value
 
-    stringMessage = ""
-    res = ""
-    #convert from 10 to 70
-    while p > 0:
-      res += alphabet[pow(int(p),1,70)]
-      p = int(p)//70
-    stringMessage += str(res)
+      key = pow(num,d,n)
+      result = ""
+      if key == 0:
+        result = alphabet[0]
+      while key != 0:
+        result = alphabet[key % 70] + result
+        key = key // 70
+      if result == "":
+        result = "0"
+      message += result
+
     fin = open(outfile,"wb")
-    fin.write(stringMessage.encode("utf-8"))
+    fin.write(message.encode("utf-8"))
     fin.close()
     return
 ########################################################################
 def main():
   RSA()
-  #RSA.GenerateKeys("1592453365784564532654789656547895421229123212599746326553211458974563264573724576724377584723754646728352545764849758652432421342714576746745","1592453365784569532654789656547895421229123212599746346553211458974563234573724576724377584723774646728352545764849758612432421342714576746745")
-  fin = open("testfile.txt","w")
-  fin.write("this is a lot of test code you got to test in order to have test code oh wow it seems i have really done it i am a super genius of unparelled genius for being like me oh year i am great oh yea where do you break i kn")
-  fin.close()
+  RSA.GenerateKeys("15924533657845645326547896565478954212291232125997463265214276172791575553211458974563264573724576724377584723754646728352545764849758652432421342714576746745","1592453365784569532654789656547895421229123212599746346553211458974563234573724576724377584714567427364619758345645123774646728352545764849758612432421342714576746745")
+  #fin = open("testfile.txt","w")
+  #fin.write("this is a lot of test code you got to test in order to have test code oh wow it seems i have really done it i am a super genius of unparelled genius for being like me oh year i am great oh yea where do you break i kn")
+  #fin.close()
   RSA.Encrypt("testfile.txt","encrptedtestfile.txt")
   RSA.Decrypt("encrptedtestfile.txt","decreptedtestfile.txt")
-  
-  fin = open("testfile.txt","r")
-  print(fin.read())
-  fin.close()
-
-  fin = open("decreptedtestfile.txt","r")
-  print(fin.read())
-  fin.close()
+  #fin = open("testfile.txt","r")
+  #print(fin.read())
+  #fin.close()
+  #print("")
+  #fin = open("decreptedtestfile.txt","r")
+  #print(fin.read())
+  #fin.close()
 
 ###################################################################
 def miller(num,base):
@@ -170,15 +207,6 @@ def miller(num,base):
   return True
 ##################################################################
 def prime(num,k):
-    #if 0 or negative not prime
-    if num <= 1:
-      return False
-    #if exactly 2 is prime special case
-    if num == 2:
-      return True
-    #if dividable by 2 is even and thefore not prime
-    if num % 2 == 0:
-      return False
     b = random.randint(2,num-1)
     while k >= 0:
       if miller(num,b):
@@ -192,19 +220,19 @@ def relativeprime(a,b):#finds nearest realtivly prime number of given number
   return math.gcd(a,b) == 1
 ############################################################################
 def findModInverse(a, m):
-    # Returns the modular inverse of a % m, which is
-    # the number x such that a*x % m = 1
-
-    if math.gcd(a, m) != 1:
-        return None # no mod inverse if a & m aren't relatively prime
-
-    # Calculate using the Extended Euclidean Algorithm:
-    u1, u2, u3 = 1, 0, a
-    v1, v2, v3 = 0, 1, m
-    while v3 != 0:
-        q = u3 // v3 # // is the integer division operator
-        v1, v2, v3, u1, u2, u3 = (u1 - q * v1), (u2 - q * v2), (u3 - q * v3), v1, v2, v3
-    return u1 % m
+    g, x, y = egcd(a, m)
+    if g != 1:
+        raise ValueError
+    return x % m
 #####################################################################
+def egcd(a, b):
+    lastR, r = abs(a), abs(b)
+    x, lastX, y, lastY = 0, 1, 1, 0
+    while r:
+        lastR, (quotient, r) = r, divmod(lastR, r)
+        x, lastX = lastX - quotient * x, x
+        y, lastY = lastY - quotient * y, y
+    return lastR, lastX * (-1 if a < 0 else 1), lastY * (-1 if b < 0 else 1)
+#############################################################################
 
 main()
